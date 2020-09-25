@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="resources/data-page.css">
+    <title>Data Visualization</title>
+  </head>
+  <body>
+    <form method="post" action="/" id="goHome">
+      <button href="../" type="submit">Home Page</button>
+    </form>
+    <div class="graph">
+      <canvas id="myChart" width="400" height="400"></canvas>
+    </div>
+    <div class="graph">
+      <canvas id="myChart2" width="400" height="400"></canvas>
+    </div>
+    <div class="graph">
+      <canvas id="myChart3" width="400" height="400"></canvas>
+    </div>
+
+    <script src="/resources/angular.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/resources/socket.js"></script>
+    <script src="/resources/Chart.js"></script>
+    <script>
+      var socket = io();
+      var info;
+      var info_processed1 = [];
+      var labels1 = [];
+      var info_processed2 = [0, 0];
+      var info_processed3 = [];
+
+      var count = 0;
+
+      socket.on("forData", function(input) {
+        info = input.result.matches;
+        // alert(info);
+        console.log(info);
+
+        for (var i = 0; i < info.length; i++) {
+          // console.log(info[i]);
+          for (var j = 0; j < info[i].players.length; j++) {
+            labels1.push("player_" + String(count));
+            count++;
+
+            info_processed1.push(Number(info[i].players[j].gold_per_min));
+            // info_processed1[j] = info[i].players[j].gold_per_min;
+          }
+          info_processed2[0] += info[i].radiant_score;
+          info_processed2[1] += info[i].dire_score;
+          info_processed3.push({x: i, y: info[i].first_blood_time, r: 5});
+        }
+        // console.log(info_processed1);
+
+
+
+
+        var ctx = document.getElementById('myChart').getContext('2d');
+        var myChart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: labels1,
+            datasets: [{
+              label: 'GPM',
+              data: info_processed1,
+              backgroundColor: [
+                'rgba(255, 159, 64, 0.2)'
+              ],
+              borderColor: [
+                'rgba(255, 159, 64, 1)'
+              ],
+            }]
+          }
+        });
+
+        var ctx = document.getElementById('myChart2').getContext('2d');
+        var myPieChart = new Chart(ctx, {
+          type: 'pie',
+          data: {
+            datasets: [{
+              data: info_processed2,
+              backgroundColor: [
+                'rgba(54, 162, 235, 0.2)',
+                'rgba(255, 99, 132, 0.2)'
+              ]
+            }],
+            // These labels appear in the legend and in the tooltips when hovering different arcs
+          labels: [ 'radiant_score', 'dire_score' ]
+          }
+          // options: options
+        });
+
+
+
+        var ctx = document.getElementById('myChart3').getContext('2d');
+        var myLineChart = new Chart(ctx, {
+          type: 'bubble',
+          data: {
+            datasets: [{
+              label: [ 'First Blood Time' ],
+              data: info_processed3
+            }]
+          }
+          // options: options
+        });
+      });
+
+    </script>
+  </body>
+</html>
